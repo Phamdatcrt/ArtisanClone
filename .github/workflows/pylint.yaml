@@ -1,0 +1,65 @@
+name: Pylint
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+  workflow_dispatch:
+    inputs:
+      logLevel:
+        description: 'Log level'
+        required: true
+        default: 'warning'
+        type: choice
+        options:
+        - info
+        - warning
+        - debug
+      tags:
+        description: 'Test scenario tags'
+        required: false
+        type: boolean
+      environment:
+        description: 'Environment to run tests against'
+        type: environment
+        required: true
+jobs:
+  build:
+    runs-on: ubuntu-latest
+#    if: github.ref == 'refs/heads/master'
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+        cache: 'pip' # caching pip dependencies
+    - name: Install dependencies
+      run: |
+        pip install --upgrade pip==24.0 # downgrade pip as pip v24.1 fails with pip._vendor.packaging.version.InvalidVersion: Invalid version: '6.5.0-1022-azure' (image name!)
+        pip install --upgrade -r src/requirements-dev.txt
+        pip install -r src/requirements.txt
+    - name: Analysing the code with pylint
+      env:
+        REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        pylint --disable=C --disable=R --extension-pkg-allow-list=PyQt6 --load-plugins=pylint.extensions.no_self_use src/plus
+        pylint --disable=C --disable=R --extension-pkg-allow-list=PyQt6 --load-plugins=pylint.extensions.no_self_use src/artisanlib
+#    - name: Set up reviewdog
+#      run: |
+#        mkdir -p "$HOME/bin"
+#        curl -sfL \
+#          https://github.com/reviewdog/reviewdog/raw/master/install.sh | \
+#            sh -s -- -b "$HOME/bin"
+#        echo "$HOME/bin" >> $GITHUB_PATH
+#    - name: Analysing the code with pylint
+#      env:
+#        REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#      run: |
+#        set -o pipefail
+#        pylint --disable=C --disable=R --extension-pkg-allow-list=PyQt6 --load-plugins=pylint.extensions.no_self_use src/plus | reviewdog -efm="%f:%l:%c: %m" -reporter=github-check
+#        pylint --disable=C --disable=R --extension-pkg-allow-list=PyQt6 --load-plugins=pylint.extensions.no_self_use src/artisanlib | reviewdog -efm="%f:%l:%c: %m" -reporter=github-check
