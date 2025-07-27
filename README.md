@@ -126,3 +126,5 @@ License
 -------
 
 [![](http://www.gnu.org/graphics/gplv3-88x31.png)](http://www.gnu.org/copyleft/gpl.html)
+#   A r t i s a n C l o n e  
+ 
